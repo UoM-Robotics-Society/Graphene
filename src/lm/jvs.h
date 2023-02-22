@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 void lm_jvs_tick(void);
 
 #define LM_JVS_SYNC 0xE0
@@ -25,7 +27,10 @@ void lm_jvs_tick(void);
 #define LM_JVS_FEATURE_PAD 0x00
 #define LM_JVS_FEATURE_EOF 0x00
 // We're disregarding the per-spec feature list, because it's heavily arcade-centric
-#define LM_JVS_FEATURE_CHANNEL 0x01
+#define LM_JVS_FEATURE_NOTE_CHANNEL 0x01
+#define LM_JVS_FEATURE_LIGHT_CHANNEL 0x02
+#define LM_JVS_FEATURE_CONTROL_CHANNEL 0x03
+#define LM_JVS_FEATURE_OFFSET 0x04
 
 #define LM_JVS_CMD_RESET_CHECK 0xD9
 
@@ -49,3 +54,15 @@ void lm_jvs_tick(void);
 // Graphene main commands
 #define LM_JVS_CMD_GRAPHENE_DOWN 0x70
 #define LM_JVS_CMD_GRAPHENE_UP 0x71
+#define LM_JVS_CMD_GRAPHENE_LIGHT 0x72
+#define LM_JVS_CMD_GRAPHENE_CONTROL 0x73
+
+extern uint8_t lm_jvs_sum;
+extern uint8_t lm_jvs_ibuf[64];
+extern uint8_t lm_jvs_obuf[64];
+extern uint8_t lm_jvs_obuf_ptr;
+#define lm_jvs_write(data)                   \
+    do {                                     \
+        lm_jvs_obuf[lm_jvs_obuf_ptr++] = data; \
+        lm_jvs_sum += data;                  \
+    } while (0)

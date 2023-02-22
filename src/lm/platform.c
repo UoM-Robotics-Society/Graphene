@@ -15,4 +15,6 @@ lm_sense_t __attribute__((weak)) lm_platform_sense_get(void) { return lm_sense_h
 void __attribute__((weak)) lm_platform_sense_set(lm_sense_t state){};
 void __attribute__((weak)) lm_platform_serial_select(lm_select_t status);
 
+void __attribute__((weak)) lm_platform_features(void){};
+
 const char* __attribute__((weak)) lm_platform_name = "libmusician;Ver1.00;";

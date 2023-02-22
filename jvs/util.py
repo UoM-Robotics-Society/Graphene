@@ -1,9 +1,9 @@
 from .packet import JVSPacketIn
-from .const import JVS_TIMEOUT, JVS_RESEND_RETRIES, JVS_REPORT_OK, JVS_STATUS_OK, JVS_STATUS_SUM
-from .error import JVSStatusNack, JVSReportNack
+from .const import JVS_TIMEOUT, JVS_RESEND_RETRIES, JVS_STATUS_OK, JVS_STATUS_SUM
+from .error import JVSStatusNack
 
 
-def wait_resp(com_or_node, timeout=JVS_TIMEOUT, retries=JVS_RESEND_RETRIES):
+def wait_resp(com_or_node, timeout=JVS_TIMEOUT, retries=JVS_RESEND_RETRIES) -> JVSPacketIn:
     from .node import JVSNode
 
     if isinstance(com_or_node, JVSNode):
@@ -21,8 +21,6 @@ def wait_resp(com_or_node, timeout=JVS_TIMEOUT, retries=JVS_RESEND_RETRIES):
             node.resend()
             return wait_resp(com_or_node, timeout, retries - 1)
         raise JVSStatusNack(pkt)
-    if pkt.report != JVS_REPORT_OK:
-        raise JVSReportNack(pkt)
     return pkt
 
 

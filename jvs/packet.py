@@ -1,18 +1,20 @@
-from .const import JVS_MARK, JVS_NODE_MASTER, JVS_STATUS_OK, JVS_SYNC
+from .const import JVS_MARK, JVS_NODE_MASTER, JVS_SYNC
 
 
 class JVSPacketOut:
-    def __init__(self, dst, cmd, data=b""):
+    def __init__(self, dst: int, *cmds: tuple[int, bytes]):
         self.dst = dst
-        self.cmd = cmd
-        self.data = data
+        self.cmds = cmds
 
     def __iter__(self):
         return iter(bytes(self))
 
     def __bytes__(self):
-        body = bytearray([self.dst, len(self.data) + 2, self.cmd])
-        body += self.data
+        body = bytearray([self.dst, 0])
+        for cmd, data in self.cmds:
+            body.append(cmd)
+            body += data
+        body[1] = len(body)
         body += bytearray([sum(body) % 256])
         escaped = bytearray()
         for i in body:
@@ -25,13 +27,12 @@ class JVSPacketOut:
 
 
 class JVSPacketIn:
-    def __init__(self, status, report, data=b""):
+    def __init__(self, status: int, data: bytes):
         self.status = status
-        self.report = report
         self.data = data
 
     @classmethod
-    def from_packet(cls, packet):
+    def from_packet(cls, packet: bytes):
         if len(packet) < 5:
             return None
 
@@ -41,17 +42,16 @@ class JVSPacketIn:
             return None
         dlen = packet[2]
         status = packet[3]
-        report = packet[4]
-        data = packet[4:4 + dlen - 3]
-        check = packet[4 + dlen - 3]
-        if (dlen + status + report + sum(data)) % 256 != check:
+        data = packet[3:3 + dlen - 2]
+        check = packet[3 + dlen - 2]
+        if (dlen + status + sum(data)) % 256 != check:
             print("Checksum failed!")
             return None
 
-        return cls(status, report, data)
+        return cls(status, data)
 
     @classmethod
-    def _ser_read_one(cld, ser):
+    def _ser_read_one(cls, ser):
         byte = ser.read(1)
         if len(byte) == 0:
             raise TimeoutError
@@ -65,26 +65,22 @@ class JVSPacketIn:
             dest = cls._ser_read_one(ser)
             dlen = cls._ser_read_one(ser)
             status = cls._ser_read_one(ser)
-            
-            data = bytearray()
-            if status == JVS_STATUS_OK:
-                report = cls._ser_read_one(ser)
-                for _ in range(dlen - 3):
-                    data.append(cls._ser_read_one(ser))
-            else:
-                report = 0
 
-            calc_sum = (dest + dlen + status + report + sum(data)) % 256
+            data = bytearray()
+            for _ in range(dlen - 2):
+                data.append(cls._ser_read_one(ser))
+
+            calc_sum = (dest + dlen + status + sum(data)) % 256
             try:
                 check = cls._ser_read_one(ser)
             except TimeoutError:
                 raise
             if calc_sum != check:
                 print("W: Checksum failed!")
-                print(f"[{dest:02x} {dlen:02x} {status:02x} {report:02x} {data}]  {calc_sum}(exp)!={check:02x}(seen)")
-                pass # continue
+                print(f"[{dest:02x} {dlen:02x} {status:02x} {data}]  {calc_sum}(exp)!={check:02x}(seen)")
+                pass  # continue
             if dest != JVS_NODE_MASTER:
                 print("W: Packet not for master")
                 continue
 
-            return cls(status, report, data)
+            return cls(status, data)

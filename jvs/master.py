@@ -24,9 +24,14 @@ class JVSMaster:
         self.lock = threading.Lock()
         self._last_send = 0
 
-    def write(self, node, data: bytes, response=False):
+    def exchange(self, data: bytes):
+        self.write(data)
         with self.lock:
-            # print("Got lock")
+            ret = wait_resp(self.com)
+            return ret
+
+    def write(self, data: bytes):
+        with self.lock:
             now = time.time()
             delta = now - self._last_send
             if delta < MIN_SEND_DELAY:
@@ -34,11 +39,6 @@ class JVSMaster:
             self._last_send = now
 
             self.com.write(data)
-            if response:
-                ret = wait_resp(node)
-                # print("unlock")
-                return ret
-            # print("unlock")
 
     def locate_port(self):
         devices = serial.tools.list_ports.comports()
@@ -51,7 +51,7 @@ class JVSMaster:
     def reset(self, count=2):
         self.nodes.clear()
         for _ in range(count):
-            self.com.write(JVSPacketOut(JVS_NODE_BROADCAST, JVS_CMD_RESET, bytearray([JVS_CMD_RESET_CHECK])))
+            self.com.write(JVSPacketOut(JVS_NODE_BROADCAST, (JVS_CMD_RESET, bytearray([JVS_CMD_RESET_CHECK]))))
             time.sleep(JVS_RESET_DELAY)
         time.sleep(JVS_POST_RESET_DELAY)
 
@@ -65,7 +65,7 @@ class JVSMaster:
 
             print(".", end="", flush=True)
             # Set ID
-            self.com.write(JVSPacketOut(JVS_NODE_BROADCAST, JVS_CMD_ASSIGN_ADDR, bytearray([next_id])))
+            self.com.write(JVSPacketOut(JVS_NODE_BROADCAST, (JVS_CMD_ASSIGN_ADDR, bytearray([next_id]))))
             time.sleep(0.1)
             try:
                 wait_resp(self.com)

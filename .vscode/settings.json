@@ -1,0 +1,10 @@
+{
+    "python.analysis.typeCheckingMode": "basic",
+    "files.associations": {
+        "*.twig": "html",
+        "*.thtml": "php",
+        "*.inc": "php",
+        "*.h": "c",
+        "*.bak": "cpp"
+    }
+}

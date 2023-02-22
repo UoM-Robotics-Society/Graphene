@@ -24,6 +24,8 @@ void lm_platform_sense_set(lm_sense_t state);
 void lm_platform_serial_select(lm_select_t status);
 void lm_platform_reset(void);
 
+void lm_platform_features(void);
+
 /*
  * Return the identification name for this robot.
  * Contains three fields, seperated by semicolons:
