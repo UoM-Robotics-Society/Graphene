@@ -1,0 +1,24 @@
+{
+	"folders": [
+		{
+			"name": "Glock",
+			"path": "instruments/Glock"
+		},
+		{
+			"name": "Tambourine",
+			"path": "instruments/Tambourine"
+		},
+		{
+			"name": "Steppers",
+			"path": "instruments/Steppers"
+		},
+		{
+			"name": "Conductor",
+			"path": "conductor"
+		},
+		{
+			"name": "lm-library",
+			"path": "lm-library"
+		}
+	]
+}
